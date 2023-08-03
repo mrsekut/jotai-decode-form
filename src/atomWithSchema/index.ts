@@ -1,5 +1,6 @@
 import { WritableAtom, atom } from 'jotai';
 import { atomWithReducer } from 'jotai/utils';
+import { reducer } from './fieldStatus';
 
 export function atomWithSchema<
   Value,
@@ -21,6 +22,10 @@ export function atomWithSchema<
   schema?: Schema<Value, ExValue>;
 }): WritableAtom<AtomWithSchemaReturn<Value, ExValue>, [ExValue], void>;
 
+/**
+ * TODO:
+ * - use onMount?
+ */
 export function atomWithSchema<
   Value_,
   ExValue extends string = string,
@@ -152,10 +157,3 @@ export const success = <Output>(data: Output): Success<Output> => ({
   success: true,
   data,
 });
-
-// Field Status
-type FieldStatus = 'dirty' | 'pristine';
-
-function reducer(_: FieldStatus): FieldStatus {
-  return 'dirty';
-}
