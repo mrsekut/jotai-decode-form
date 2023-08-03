@@ -9,6 +9,7 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "types": ["testing-library__jest-dom"],
 
     "strict": true,
     "allowUnreachableCode": false,
