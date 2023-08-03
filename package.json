@@ -21,7 +21,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "jotai": ">=2"
