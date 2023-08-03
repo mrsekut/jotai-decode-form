@@ -1,0 +1,33 @@
+{
+  "name": "jotai-decode-form",
+  "version": "0.0.1",
+  "description": "typed form",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "packageManager": "npm@9.6.7",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "typescript",
+    "form",
+    "form-validation"
+  ],
+  "author": "mrsekut",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "jotai": ">=2"
+  },
+  "devDependencies": {
+    "better-typescript-lib": "^2.4.0",
+    "eslint-plugin-import-access": "^1.1.2",
+    "typescript": "^5.1.3"
+  }
+}
