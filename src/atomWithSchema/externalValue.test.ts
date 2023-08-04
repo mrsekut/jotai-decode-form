@@ -25,8 +25,8 @@ describe('Changing the external value updates the external value', () => {
     const fieldAtom = atomWithSchema({
       initValue: 0,
       schema: {
-        i2e: value => `${value}`,
-        e2i: z.coerce.number().safeParse,
+        toView: value => `${value}`,
+        fromView: z.coerce.number().safeParse,
       },
     });
     const { result: field } = renderHook(() => useAtom(fieldAtom));
@@ -45,8 +45,8 @@ test('An error can be confirmed when validation is not met', () => {
   const fieldAtom = atomWithSchema({
     initValue: 0,
     schema: {
-      i2e: value => `${value}`,
-      e2i: z.coerce.number().max(20).safeParse,
+      toView: value => `${value}`,
+      fromView: z.coerce.number().max(20).safeParse,
     },
   });
   const { result: field } = renderHook(() => useAtom(fieldAtom));
@@ -66,8 +66,8 @@ test('The internal value is also updated only when there are no errors', () => {
   const fieldAtom = atomWithSchema({
     initValue: 0,
     schema: {
-      i2e: value => `${value}`,
-      e2i: z.coerce.number().safeParse,
+      toView: value => `${value}`,
+      fromView: z.coerce.number().safeParse,
     },
   });
   const { result: field } = renderHook(() => useAtom(fieldAtom));
@@ -85,8 +85,8 @@ test('If there is an error, the internal value will not be updated', () => {
   const fieldAtom = atomWithSchema({
     initValue: 0,
     schema: {
-      i2e: String,
-      e2i: z.coerce.number().safeParse,
+      toView: String,
+      fromView: z.coerce.number().safeParse,
     },
   });
   const { result: field } = renderHook(() => useAtom(fieldAtom));

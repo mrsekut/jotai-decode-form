@@ -34,8 +34,8 @@ describe('When the initial value is null, exValue is an empty string', () => {
   test('with schema', () => {
     const fieldAtom = atomWithSchema({
       schema: {
-        i2e: value => `${value}`,
-        e2i: z.coerce.number().safeParse,
+        toView: value => `${value}`,
+        fromView: z.coerce.number().safeParse,
       },
     });
     const { result: field } = renderHook(() => useAtomValue(fieldAtom));

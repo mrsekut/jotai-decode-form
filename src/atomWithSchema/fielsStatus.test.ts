@@ -25,8 +25,8 @@ describe('Changing the external value sets isDirty to true', () => {
     const fieldAtom = atomWithSchema<number>({
       initValue: 0,
       schema: {
-        i2e: value => `${value}`,
-        e2i: z.coerce.number().safeParse,
+        toView: value => `${value}`,
+        fromView: z.coerce.number().safeParse,
       },
     });
     const { result: field } = renderHook(() => useAtom(fieldAtom));

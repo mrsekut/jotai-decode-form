@@ -30,8 +30,8 @@ describe('Updating the internal value also updates both internal and external va
     const fieldAtom = atomWithSchema({
       initValue: 0,
       schema: {
-        i2e: value => `${value}`,
-        e2i: z.number().safeParse,
+        toView: value => `${value}`,
+        fromView: z.number().safeParse,
       },
     });
     const { result: field } = renderHook(() => useAtomValue(fieldAtom));

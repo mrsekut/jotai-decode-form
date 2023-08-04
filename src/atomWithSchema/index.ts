@@ -36,12 +36,12 @@ export function atomWithSchema<
   const schema = options?.schema;
 
   const valueAtom = atom<Value>(initValue);
-  const externalAtom = atom<ExValue>(i2e(initValue));
+  const externalAtom = atom<ExValue>(toView(initValue));
   const statusAtom = atomWithReducer('pristine', reducer);
-  const validationAtom = atom(get => e2i(get(externalAtom)));
+  const validationAtom = atom(get => fromView(get(externalAtom)));
 
   const onChangeInValueAtom = atom(null, (_, set, newValue: Value) => {
-    set(externalAtom, i2e(newValue));
+    set(externalAtom, toView(newValue));
     set(valueAtom, newValue);
   });
 
@@ -73,7 +73,7 @@ export function atomWithSchema<
     };
   });
 
-  function e2i(value: ExValue): ValidationResult<Value_> {
+  function fromView(value: ExValue): ValidationResult<Value_> {
     if (schema == null) {
       return {
         success: true,
@@ -81,16 +81,16 @@ export function atomWithSchema<
       };
     }
 
-    return schema.e2i(value);
+    return schema.fromView(value);
   }
 
-  function i2e(value: Value): ExValue {
+  function toView(value: Value): ExValue {
     if (value == null) {
       return '' as ExValue;
     }
 
     if (schema != null) {
-      return schema.i2e(value);
+      return schema.toView(value);
     }
 
     return `${value}` as ExValue;
@@ -140,8 +140,8 @@ type Schema<In, Ex extends string = string> =
 
 type InternalOnly = undefined;
 type WithExternal<In, Ex extends string = string> = {
-  i2e: (internal: In) => Ex;
-  e2i: (external: Ex) => ValidationResult<In>;
+  toView: (internal: In) => Ex;
+  fromView: (external: Ex) => ValidationResult<In>;
 };
 
 // Validation
