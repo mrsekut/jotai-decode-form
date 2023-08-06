@@ -39,7 +39,7 @@ export const Field: React.FC = () => {
         <ErrorText error={field.state.error} />
       )}
 
-      <DisplayInternalValue value={field.value} />
+      <DisplayInternalValue value={field.value} label="UTC" />
     </div>
   );
 };
