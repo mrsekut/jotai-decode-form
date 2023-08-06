@@ -1,25 +1,29 @@
-import { useState } from 'react';
 import './App.css';
+import { Field as SimpleField } from './fields/simple';
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount(count => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <h1>Examples</h1>
+      <div className="examples">
+        <FieldLayout label="simple">
+          <SimpleField />
+        </FieldLayout>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   );
 }
 
 export default App;
+
+const FieldLayout: React.FC<{
+  label: string;
+  children: React.ReactNode;
+}> = ({ label, children }) => {
+  return (
+    <div className="example_layout">
+      <h3>{label}</h3>
+      <div>{children}</div>
+    </div>
+  );
+};
