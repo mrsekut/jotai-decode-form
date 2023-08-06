@@ -2,6 +2,7 @@ import './App.css';
 import { Field as SimpleField } from './fields/simple';
 import { Field as BasicNumberField } from './fields/basic_number';
 import { Field as TransUnitField } from './fields/trans_unit';
+import { Field as SelectField } from './fields/select';
 
 function App() {
   return (
@@ -18,6 +19,10 @@ function App() {
 
         <FieldLayout label="trans unit number">
           <TransUnitField />
+        </FieldLayout>
+
+        <FieldLayout label="selectbox">
+          <SelectField />
         </FieldLayout>
       </div>
     </>
