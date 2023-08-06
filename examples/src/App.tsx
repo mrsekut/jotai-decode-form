@@ -1,5 +1,6 @@
 import './App.css';
 import { Field as SimpleField } from './fields/simple';
+import { Field as BasicNumberField } from './fields/basic_number';
 
 function App() {
   return (
@@ -8,6 +9,10 @@ function App() {
       <div className="examples">
         <FieldLayout label="simple">
           <SimpleField />
+        </FieldLayout>
+
+        <FieldLayout label="basic number">
+          <BasicNumberField />
         </FieldLayout>
       </div>
     </>
