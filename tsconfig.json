@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2019",
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "NodeNext",
     "lib": ["esnext", "dom"],
     "declaration": true,
     "declarationMap": true,
@@ -9,7 +10,7 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["testing-library__jest-dom"],
+    "types": ["testing-library__jest-dom", "vitest/importMeta"],
 
     "strict": true,
     "allowUnreachableCode": false,
