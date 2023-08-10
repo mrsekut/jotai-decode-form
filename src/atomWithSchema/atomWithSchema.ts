@@ -1,6 +1,6 @@
 import { WritableAtom, atom } from 'jotai';
 import { atomWithReducer } from 'jotai/utils';
-import { reducer } from './fieldStatus';
+import { FieldState, reducer } from './fieldState';
 
 export function atomWithSchema<
   Value,
@@ -55,7 +55,7 @@ export function atomWithSchema<
     }
   });
 
-  const stateAtom = atom<State<Value_>>(get => {
+  const stateAtom = atom<FieldState<Value_>>(get => {
     const result = get(validationAtom);
     const isDirty = get(statusAtom) === 'dirty';
 
@@ -117,21 +117,9 @@ type AtomWithSchemaReturn<
 > = {
   value: true extends HasInit ? Value : Value | null;
   exValue: ExValue;
-  state: State<Value>;
+  state: FieldState<Value>;
   onChangeInValueAtom: WritableAtom<null, [newValue: Value], void>;
 };
-
-// State
-type State<Value> =
-  | {
-      isDirty: boolean;
-      error: string;
-    }
-  | {
-      isDirty: boolean;
-      error: undefined;
-      submitValue: Value;
-    };
 
 // Schema
 type Schema<In, Ex extends string = string> =
