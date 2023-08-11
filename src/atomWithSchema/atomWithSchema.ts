@@ -133,11 +133,7 @@ type WithExternal<In, Ex extends string = string> = {
 };
 
 // Validation
-type ValidationResult<Output> =
-  | Success<Output>
-  | { success: false; error: ZodError };
-
-type ZodError = { issues: { message: string }[] };
+type ValidationResult<Output> = Success<Output> | Failure;
 
 type Success<Output> = { success: true; data: Output };
 
@@ -145,3 +141,6 @@ export const success = <Output>(data: Output): Success<Output> => ({
   success: true,
   data,
 });
+
+type Failure = { success: false; error: ZodError };
+type ZodError = { issues: { message: string }[] };
