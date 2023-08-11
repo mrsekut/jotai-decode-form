@@ -1,7 +1,7 @@
 import { test, expect, expectTypeOf } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { z } from 'zod';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { atomWithSchema } from '../atomWithSchema';
 import { atomForm } from '.';
@@ -49,7 +49,31 @@ test('when there is a validation error, isValid becomes false', () => {
   expect(form.current.isValid).toStrictEqual(false);
 });
 
-test('values type shoule be matched with schema type', () => {
+test('atomForm is writable', () => {
+  const fieldAtom = atomWithSchema<number>({
+    schema: {
+      toView: String,
+      fromView: z.coerce.number().safeParse,
+    },
+  });
+  const formAtom = atomForm({ field: fieldAtom });
+
+  const { result: form } = renderHook(() => useAtom(formAtom));
+  const { result: field } = renderHook(() => useAtom(fieldAtom));
+
+  act(() => {
+    form.current[1]({ field: 1 });
+  });
+
+  expect(form.current[0]).toStrictEqual({
+    isValid: true,
+    values: { field: 1 },
+  });
+  expect(field.current[0].value).toStrictEqual(1);
+  expect(field.current[0].exValue).toStrictEqual('1');
+});
+
+test('values type should match with schema type', () => {
   const formAtom = atomForm({
     field1: atomWithSchema<number>(),
     field2: atomWithSchema<{ type: number }>(),
