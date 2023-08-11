@@ -118,7 +118,7 @@ export function atomWithSchema<
 }
 
 // Return
-type AtomWithSchemaReturn<
+export type AtomWithSchemaReturn<
   Value,
   ExValue extends string = string,
   HasInit extends boolean = true,

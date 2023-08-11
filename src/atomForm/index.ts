@@ -1,3 +1,34 @@
+import { Atom, WritableAtom, atom } from 'jotai';
+import { AtomWithSchemaReturn } from '../atomWithSchema/atomWithSchema';
+import { FieldState } from '../atomWithSchema/fieldState';
+import { recordValueMap } from '../utils/record';
+
+type AtomWithSchema<V> = WritableAtom<
+  AtomWithSchemaReturn<V, any, any>,
+  [any],
+  void
+>;
+
+export function atomForm<
+  AtomFields extends Record<string, AtomWithSchema<any>>,
+>(fields: AtomFields): Atom<AtomFormReturn<AtomFields>> {
+  type Output = ReturnType<typeof atomForm<AtomFields>>;
+
+  return atom(get => {
+    const statesAtom = recordValueMap(fields, v => get(v).state);
+    return fold(recordValueMap(statesAtom, state2result));
+  }) as Output;
+}
+
+// Return
+type AtomFormReturn<AtomFields extends Record<string, AtomWithSchema<any>>> =
+  FormResult<PickValuesFromSchema<AtomFields>>;
+
+type PickValuesFromSchema<R> = {
+  [K in keyof R]: R[K] extends AtomWithSchema<infer V> ? V : never;
+};
+
+// Fold
 type FormResult<Values extends Record<string, unknown>> =
   | { isValid: false }
   | { isValid: true; values: Values };
@@ -64,3 +95,15 @@ if (import.meta.vitest) {
     });
   });
 }
+
+// Utils
+const state2result = <V>(state: FieldState<V>): FieldResult<V> => {
+  if (state.error != null) {
+    return { error: state.error };
+  }
+
+  return {
+    error: undefined,
+    value: state.submitValue,
+  };
+};
