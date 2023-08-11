@@ -14,12 +14,20 @@ export function atomWithSchema<
   schema: Schema<Value, ExValue>;
 }): WritableAtom<AtomWithSchemaReturn<Value, string, false>, [ExValue], void>;
 
+// if only initValue is provided, Value should be string
+export function atomWithSchema<
+  Value extends string = string,
+  ExValue extends string = string,
+>(options: {
+  initValue: Value;
+}): WritableAtom<AtomWithSchemaReturn<Value, ExValue>, [ExValue], void>;
+
 export function atomWithSchema<
   Value,
   ExValue extends string = string,
 >(options: {
   initValue: Value;
-  schema?: Schema<Value, ExValue>;
+  schema: Schema<Value, ExValue>;
 }): WritableAtom<AtomWithSchemaReturn<Value, ExValue>, [ExValue], void>;
 
 /**
