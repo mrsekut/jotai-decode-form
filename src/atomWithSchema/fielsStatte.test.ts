@@ -8,7 +8,7 @@ import { atomWithSchema } from '.';
 describe('Changing the external value sets isDirty to true', () => {
   test('without Schema', () => {
     const fieldAtom = atomWithSchema({
-      initValue: 0,
+      initValue: '0',
     });
     const { result: field } = renderHook(() => useAtom(fieldAtom));
 
