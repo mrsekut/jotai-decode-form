@@ -1,4 +1,4 @@
-import { Atom, WritableAtom, atom } from 'jotai';
+import { WritableAtom, atom } from 'jotai';
 import { AtomWithSchemaReturn } from '../atomWithSchema/atomWithSchema';
 import { FieldState } from '../atomWithSchema/fieldState';
 
@@ -10,28 +10,41 @@ type AtomWithSchema<V> = WritableAtom<
 
 export function atomForm<
   AtomFields extends Record<string, AtomWithSchema<any>>,
->(fields: AtomFields): Atom<AtomFormReturn<AtomFields>> {
-  return atom(get => {
-    const init = { values: {}, isValid: true } as AtomFormReturn<AtomFields>;
-    return Object.entries(fields)
-      .map(([k, v]) => [k, get(v).state] as const)
-      .map(([k, v]) => [k, state2result(v)] as const)
-      .reduce((acc, [key, value]) => {
-        if (!acc.isValid || value.error != null) {
-          return {
-            isValid: false,
-          };
-        }
+>(
+  fields: AtomFields,
+): WritableAtom<
+  AtomFormReturn<AtomFields>,
+  [PickValuesFromSchema<AtomFields>],
+  void
+> {
+  return atom(
+    get => {
+      const init = { values: {}, isValid: true } as AtomFormReturn<AtomFields>;
+      return Object.entries(fields)
+        .map(([k, v]) => [k, get(v).state] as const)
+        .map(([k, v]) => [k, state2result(v)] as const)
+        .reduce((acc, [key, value]) => {
+          if (!acc.isValid || value.error != null) {
+            return {
+              isValid: false,
+            };
+          }
 
-        return {
-          isValid: true,
-          values: {
-            ...acc.values,
-            [key]: value.value,
-          },
-        };
-      }, init);
-  });
+          return {
+            isValid: true,
+            values: {
+              ...acc.values,
+              [key]: value.value,
+            },
+          };
+        }, init);
+    },
+    (get, set, args) => {
+      Object.entries(fields).forEach(([k, fieldAtom]) => {
+        set(get(fieldAtom).onChangeInValueAtom, args[k]);
+      });
+    },
+  );
 }
 
 // Return
