@@ -18,6 +18,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
+    "typecheck": "vitest typecheck",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
