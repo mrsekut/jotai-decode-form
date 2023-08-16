@@ -10,7 +10,7 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["testing-library__jest-dom", "vitest/importMeta"],
+    "types": ["vitest/importMeta"],
 
     "strict": true,
     "allowUnreachableCode": false,
