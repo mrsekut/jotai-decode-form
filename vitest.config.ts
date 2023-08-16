@@ -10,5 +10,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/utils/testSetup.ts',
     includeSource: ['src/**/*.{ts,tsx}'],
+    typecheck: {
+      include: ['src/**/*.test.{ts,tsx}'],
+    },
   },
 });
