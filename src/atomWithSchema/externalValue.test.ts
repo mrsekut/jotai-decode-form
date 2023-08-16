@@ -8,7 +8,7 @@ import { atomWithSchema } from '.';
 describe('Changing the external value updates the external value', () => {
   test('without schema', () => {
     const fieldAtom = atomWithSchema({
-      initValue: 0,
+      initValue: '0',
     });
     const { result } = renderHook(() => useAtom(fieldAtom));
 

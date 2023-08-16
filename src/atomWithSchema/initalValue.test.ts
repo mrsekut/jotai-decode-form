@@ -9,6 +9,10 @@ describe('types', () => {
   test('Value type matches the initial value type when specified', () => {
     const fieldAtom = atomWithSchema({
       initValue: 0,
+      schema: {
+        toView: value => `${value}`,
+        fromView: z.coerce.number().safeParse,
+      },
     });
     const { result: field } = renderHook(() => useAtomValue(fieldAtom));
 
