@@ -2,22 +2,16 @@ import { WritableAtom, atom } from 'jotai';
 import { AtomWithSchemaReturn } from '../atomWithSchema/atomWithSchema';
 import { FieldState } from '../atomWithSchema/fieldState';
 
-type Read<Fields> = (getters: Getters) => {
-  [K in keyof Fields]: WritableAtom<FieldResult<Fields[K]>, [Fields[K]], void>;
+type Read<Values> = (getters: Getters) => Fields<Values>;
+
+type Fields<Values> = {
+  [K in keyof Values]: FieldAtomWithSym<Values[K]>;
 };
 
 type Getters = {
-  get: GetAtom;
-  getField: GetField;
+  get: <V>(a: WritableAtom<V, [V], void>) => FieldAtomWithSym<V>;
+  getField: <V>(a: AtomWithSchema<V>) => FieldAtomWithSym<V>;
 };
-
-type GetAtom = <V>(
-  a: WritableAtom<V, [V], void>,
-) => WritableAtom<FieldResult<V>, [V], void>;
-
-type GetField = <V>(
-  a: AtomWithSchema<V>,
-) => WritableAtom<FieldResult<V>, [V], void>;
 
 type AtomWithSchema<V> = WritableAtom<
   AtomWithSchemaReturn<V, any, any>,
@@ -25,20 +19,22 @@ type AtomWithSchema<V> = WritableAtom<
   void
 >;
 
-export function atomForm<V extends Record_>(
-  read: Read<V>,
-): WritableAtom<AtomFormReturn<V>, [V], void> {
+export function atomForm<Values extends Record_>(
+  read: Read<Values>,
+): WritableAtom<AtomFormReturn<Values>, [Values], void> {
   const fields = read({
-    get: a =>
-      atom(
+    get: a => ({
+      [sym]: atom(
         get => ({ isValid: true, value: get(a) }),
         (_, set, arg) => set(a, arg),
       ),
-    getField: a =>
-      atom(
+    }),
+    getField: a => ({
+      [sym]: atom(
         get => state2result(get(a).state),
         (get, set, arg) => set(get(a).onChangeInValueAtom, arg),
       ),
+    }),
   });
 
   type Fields = typeof fields;
@@ -51,7 +47,7 @@ export function atomForm<V extends Record_>(
     get => {
       return entries.reduce(
         (acc, [k, v]) => {
-          const field = get(v);
+          const field = get(v[sym]);
 
           if (!acc.isValid || !field.isValid) {
             return {
@@ -67,12 +63,12 @@ export function atomForm<V extends Record_>(
             },
           };
         },
-        { values: {}, isValid: true } as AtomFormReturn<V>,
+        { values: {}, isValid: true } as AtomFormReturn<Values>,
       );
     },
     (_, set, args) => {
       entries.forEach(([k, fieldAtom]) => {
-        set(fieldAtom, args[k]);
+        set(fieldAtom[sym], args[k]);
       });
     },
   );
@@ -105,3 +101,7 @@ const state2result = <V>(state: FieldState<V>): FieldResult<V> => {
 };
 
 type Record_ = Record<string, unknown>;
+
+const sym = Symbol('field');
+type FieldAtomWithSym<Value> = { [sym]: FieldAtom<Value> };
+type FieldAtom<Value> = WritableAtom<FieldResult<Value>, [Value], void>;
