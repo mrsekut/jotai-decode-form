@@ -107,3 +107,83 @@ test('values type should match with schema type', () => {
       }
   >();
 });
+
+test('方のテスト: atomFOrmに型を指定できる', () => {
+  const field1Atom = atom(0);
+  const field2Atom = atomWithSchema<number>({
+    schema: {
+      toView: String,
+      fromView: z.coerce.number().safeParse,
+    },
+  });
+  // これがエラーにならない
+  const formAtom = atomForm<{ field1: number; field2: number }>(
+    ({ get, getField }) => ({
+      field1: get(field1Atom),
+      field2: getField(field2Atom),
+    }),
+  );
+});
+
+test('TODO:ネストできる', () => {
+  const field1Atom = atomWithSchema({
+    schema: {
+      toView: String,
+      fromView: z.coerce.number().safeParse,
+    },
+  });
+  const field2Atom = atom(0);
+
+  const formAtom = atomForm(({ get, getField }) => ({
+    field1: getField(field1Atom),
+    field2: {
+      value: get(field2Atom),
+      field3: {
+        value: get(field2Atom),
+      },
+    },
+  }));
+
+  const { result: setField1 } = renderHook(() => useSetAtom(field1Atom));
+  const { result: form } = renderHook(() => useAtomValue(formAtom));
+
+  act(() => {
+    setField1.current('1'); // valid input
+  });
+
+  expect(form.current).toStrictEqual({
+    isValid: true,
+    values: {
+      field1: 1,
+      field2: {
+        value: 0,
+        field3: {
+          value: 0,
+        },
+      },
+    },
+  });
+});
+
+// TODO: ネストしたもののwritableのテスト
+
+test('TODO:型: 最後の子はatom等のなにか出ないといけない', () => {
+  const field1Atom = atomWithSchema({
+    schema: {
+      toView: String,
+      fromView: z.coerce.number().safeParse,
+    },
+  });
+  const field2Atom = atom(0);
+
+  const formAtom = atomForm(({ get, getField }) => ({
+    field1: getField(field1Atom),
+    field2: {
+      value: get(field2Atom),
+      field3: {
+        value: get(field2Atom),
+        aa: 1, // TODO: これはだめ
+      },
+    },
+  }));
+});

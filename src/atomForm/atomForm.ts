@@ -2,22 +2,20 @@ import { WritableAtom, atom } from 'jotai';
 import { AtomWithSchemaReturn } from '../atomWithSchema/atomWithSchema';
 import { FieldState } from '../atomWithSchema/fieldState';
 
-type Read<Fields> = (getters: Getters) => {
-  [K in keyof Fields]: WritableAtom<FieldResult<Fields[K]>, [Fields[K]], void>;
+type Read<Values extends Record_> = (getters: Getters) => DeepFields<Values>;
+
+type DeepFields<Values> = Values extends FieldAtomWithSym<any>
+  ? Fields<Values>
+  : { [K in keyof Values]: DeepFields<Values[K]> };
+
+type Fields<Values> = {
+  [K in keyof Values]: FieldAtomWithSym<Values[K]>;
 };
 
 type Getters = {
-  get: GetAtom;
-  getField: GetField;
+  get: <V>(a: WritableAtom<V, [V], void>) => FieldAtomWithSym<V>;
+  getField: <V>(a: AtomWithSchema<V>) => FieldAtomWithSym<V>;
 };
-
-type GetAtom = <V>(
-  a: WritableAtom<V, [V], void>,
-) => WritableAtom<FieldResult<V>, [V], void>;
-
-type GetField = <V>(
-  a: AtomWithSchema<V>,
-) => WritableAtom<FieldResult<V>, [V], void>;
 
 type AtomWithSchema<V> = WritableAtom<
   AtomWithSchemaReturn<V, any, any>,
@@ -25,54 +23,35 @@ type AtomWithSchema<V> = WritableAtom<
   void
 >;
 
-export function atomForm<V extends Record_>(
-  read: Read<V>,
-): WritableAtom<AtomFormReturn<V>, [V], void> {
+export function atomForm<Values extends Record_>(
+  read: Read<Values>,
+): WritableAtom<AtomFormReturn<Values>, [Values], void> {
   const fields = read({
-    get: a =>
-      atom(
+    get: a => ({
+      [sym]: atom(
         get => ({ isValid: true, value: get(a) }),
         (_, set, arg) => set(a, arg),
       ),
-    getField: a =>
-      atom(
+    }),
+    getField: a => ({
+      [sym]: atom(
         get => state2result(get(a).state),
         (get, set, arg) => set(get(a).onChangeInValueAtom, arg),
       ),
+    }),
   });
 
-  type Fields = typeof fields;
-  const entries = Object.entries(fields) as [
-    keyof Fields,
-    Fields[keyof Fields],
-  ][];
-
   return atom(
-    get => {
-      return entries.reduce(
-        (acc, [k, v]) => {
-          const field = get(v);
-
-          if (!acc.isValid || !field.isValid) {
-            return {
-              isValid: false,
-            };
-          }
-
-          return {
-            isValid: true,
-            values: {
-              ...acc.values,
-              [k]: field.value,
-            },
-          };
-        },
-        { values: {}, isValid: true } as AtomFormReturn<V>,
-      );
-    },
+    get => recursiveReduce(get)(fields),
     (_, set, args) => {
+      type Fields = typeof fields;
+      const entries = Object.entries(fields) as [
+        keyof Fields,
+        Fields[keyof Fields],
+      ][];
+
       entries.forEach(([k, fieldAtom]) => {
-        set(fieldAtom, args[k]);
+        set(fieldAtom[sym], args[k]);
       });
     },
   );
@@ -105,3 +84,50 @@ const state2result = <V>(state: FieldState<V>): FieldResult<V> => {
 };
 
 type Record_ = Record<string, unknown>;
+
+const sym = Symbol('field');
+type FieldAtomWithSym<Value> = { [sym]: FieldAtom<Value> };
+type FieldAtom<Value> = WritableAtom<FieldResult<Value>, [Value], void>;
+
+// TODO: clean, type, name
+const recursiveReduce =
+  (get: any) =>
+  (obj: any): AtomFormReturn<any> => {
+    if (sym in obj) {
+      const field = get(obj[sym]);
+      if (!field.isValid) {
+        return {
+          isValid: false,
+        };
+      }
+      return {
+        isValid: true,
+        values: field.value,
+      };
+    }
+
+    return Object.entries(obj).reduce(
+      (acc, [key, value]) => {
+        if (!acc.isValid) {
+          return acc;
+        }
+
+        const result = recursiveReduce(get)(value);
+
+        if (!result.isValid) {
+          return {
+            isValid: false,
+          };
+        }
+
+        return {
+          isValid: true,
+          values: {
+            ...acc.values,
+            [key]: result.values,
+          },
+        };
+      },
+      { values: {}, isValid: true } as AtomFormReturn<any>,
+    );
+  };
