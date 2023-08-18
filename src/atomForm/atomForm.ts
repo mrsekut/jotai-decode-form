@@ -7,8 +7,13 @@ type Read<Fields> = (getters: Getters) => {
 };
 
 type Getters = {
+  get: GetAtom;
   getField: GetField;
 };
+
+type GetAtom = <V>(
+  a: WritableAtom<V, [V], void>,
+) => WritableAtom<FieldResult<V>, [V], void>;
 
 type GetField = <V>(
   a: AtomWithSchema<V>,
@@ -24,6 +29,11 @@ export function atomForm<V extends Record_>(
   read: Read<V>,
 ): WritableAtom<AtomFormReturn<V>, [V], void> {
   const fields = read({
+    get: a =>
+      atom(
+        get => ({ isValid: true, value: get(a) }),
+        (_, set, arg) => set(a, arg),
+      ),
     getField: a =>
       atom(
         get => state2result(get(a).state),

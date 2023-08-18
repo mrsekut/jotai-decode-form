@@ -53,24 +53,34 @@ test('when there is a validation error, isValid becomes false', () => {
 });
 
 test('atomForm is writable', () => {
-  const fieldAtom = atomWithSchema<number>({
+  const field1Atom = atom(0);
+  const field2Atom = atomWithSchema<number>({
     schema: {
       toView: String,
       fromView: z.coerce.number().safeParse,
     },
   });
-  const formAtom = atomForm(({ getField }) => ({ field: getField(fieldAtom) }));
+  const formAtom = atomForm(({ get, getField }) => ({
+    field1: get(field1Atom),
+    field2: getField(field2Atom),
+  }));
 
   const { result: form } = renderHook(() => useAtom(formAtom));
-  const { result: field } = renderHook(() => useAtom(fieldAtom));
+  const { result: field } = renderHook(() => useAtom(field2Atom));
 
   act(() => {
-    form.current[1]({ field: 1 });
+    form.current[1]({
+      field1: 1,
+      field2: 1,
+    });
   });
 
   expect(form.current[0]).toStrictEqual({
     isValid: true,
-    values: { field: 1 },
+    values: {
+      field1: 1,
+      field2: 1,
+    },
   });
   expect(field.current[0].value).toStrictEqual(1);
   expect(field.current[0].exValue).toStrictEqual('1');
