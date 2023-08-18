@@ -3,21 +3,13 @@ import { AtomWithSchemaReturn } from '../atomWithSchema/atomWithSchema';
 import { FieldState } from '../atomWithSchema/fieldState';
 
 type Read<Fields> = (getters: Getters) => {
-  [K in keyof Fields]: WritableAtom<FieldResult<Fields[K]>, [Fields[K]], void>;
+  [K in keyof Fields]: FieldAtom<Fields[K]>;
 };
 
 type Getters = {
-  get: GetAtom;
-  getField: GetField;
+  get: <V>(a: WritableAtom<V, [V], void>) => FieldAtom<V>;
+  getField: <V>(a: AtomWithSchema<V>) => FieldAtom<V>;
 };
-
-type GetAtom = <V>(
-  a: WritableAtom<V, [V], void>,
-) => WritableAtom<FieldResult<V>, [V], void>;
-
-type GetField = <V>(
-  a: AtomWithSchema<V>,
-) => WritableAtom<FieldResult<V>, [V], void>;
 
 type AtomWithSchema<V> = WritableAtom<
   AtomWithSchemaReturn<V, any, any>,
@@ -105,3 +97,4 @@ const state2result = <V>(state: FieldState<V>): FieldResult<V> => {
 };
 
 type Record_ = Record<string, unknown>;
+type FieldAtom<Value> = WritableAtom<FieldResult<Value>, [Value], void>;
