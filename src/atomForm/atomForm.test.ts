@@ -15,7 +15,10 @@ test('when valid input is provided, the entire form values can be obtained', () 
   });
   const field2Atom = atomWithSchema({ initValue: '1' });
 
-  const formAtom = atomForm({ field1: field1Atom, field2: field2Atom });
+  const formAtom = atomForm(({ getField }) => ({
+    field1: getField(field1Atom),
+    field2: getField(field2Atom),
+  }));
 
   const { result: setField1 } = renderHook(() => useSetAtom(field1Atom));
   const { result: form } = renderHook(() => useAtomValue(formAtom));
@@ -37,7 +40,7 @@ test('when there is a validation error, isValid becomes false', () => {
       fromView: z.coerce.number().safeParse,
     },
   });
-  const formAtom = atomForm({ field: fieldAtom });
+  const formAtom = atomForm(({ getField }) => ({ field: getField(fieldAtom) }));
 
   const { result: setField } = renderHook(() => useSetAtom(fieldAtom));
   const { result: form } = renderHook(() => useAtomValue(formAtom));
@@ -56,7 +59,7 @@ test('atomForm is writable', () => {
       fromView: z.coerce.number().safeParse,
     },
   });
-  const formAtom = atomForm({ field: fieldAtom });
+  const formAtom = atomForm(({ getField }) => ({ field: getField(fieldAtom) }));
 
   const { result: form } = renderHook(() => useAtom(formAtom));
   const { result: field } = renderHook(() => useAtom(fieldAtom));
@@ -74,10 +77,10 @@ test('atomForm is writable', () => {
 });
 
 test('values type should match with schema type', () => {
-  const formAtom = atomForm({
-    field1: atomWithSchema<number>(),
-    field2: atomWithSchema<{ type: number }>(),
-  });
+  const formAtom = atomForm(({ getField }) => ({
+    field1: getField(atomWithSchema<number>()),
+    field2: getField(atomWithSchema<{ type: number }>()),
+  }));
 
   const { result: form } = renderHook(() => useAtomValue(formAtom));
 
@@ -93,12 +96,4 @@ test('values type should match with schema type', () => {
         };
       }
   >();
-});
-
-test('atomForm only accepts atoms defined with atomWithSchema as arguments', () => {
-  const field1Atom = atomWithSchema<number>();
-  const field2Atom = atom(1);
-
-  // @ts-expect-error
-  atomForm({ field1: field1Atom, field2: field2Atom });
 });
