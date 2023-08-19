@@ -1,1 +1,1 @@
-export * from './atomForm';
+export { atomForm } from './atomForm';

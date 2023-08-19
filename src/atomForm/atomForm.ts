@@ -1,47 +1,26 @@
-import { WritableAtom, atom } from 'jotai';
-import { AtomWithSchemaReturn } from '../atomWithSchema/atomWithSchema';
-import { FieldState } from '../atomWithSchema/fieldState';
+import { type WritableAtom, atom } from 'jotai';
+import { type GetField, getFieldAtom } from './getters/getField';
+import { type GetAtom, getAtom } from './getters/getAtom';
+import { type GetForm, getFormAtom } from './getters/getForm';
+import type { FieldAtom } from './getters/types';
 
 type Read<Fields> = (getters: Getters) => {
   [K in keyof Fields]: FieldAtom<Fields[K]>;
 };
 
 type Getters = {
-  get: <V>(a: WritableAtom<V, [V], void>) => FieldAtom<V>;
-  getField: <V>(a: AtomWithSchema<V>) => FieldAtom<V>;
-  getForm: <V extends Record_>(
-    a: WritableAtom<AtomFormReturn<V>, [V], void>,
-  ) => FieldAtom<V>;
+  get: GetAtom;
+  getField: GetField;
+  getForm: GetForm;
 };
-
-type AtomWithSchema<V> = WritableAtom<
-  AtomWithSchemaReturn<V, any, any>,
-  [any],
-  void
->;
 
 export function atomForm<V extends Record_>(
   read: Read<V>,
 ): WritableAtom<AtomFormReturn<V>, [V], void> {
   const fields = read({
-    get: a =>
-      atom(
-        get => ({ isValid: true, value: get(a) }),
-        (_, set, arg) => set(a, arg),
-      ),
-    getField: a =>
-      atom(
-        get => state2result(get(a).state),
-        (get, set, arg) => set(get(a).onChangeInValueAtom, arg),
-      ),
-    getForm: a =>
-      atom(
-        get => {
-          const v = get(a);
-          return v.isValid ? { isValid: true, value: v.values } : v;
-        },
-        (_, set, arg) => set(a, arg),
-      ),
+    get: getAtom,
+    getField: getFieldAtom,
+    getForm: getFormAtom,
   });
 
   type Fields = typeof fields;
@@ -82,30 +61,10 @@ export function atomForm<V extends Record_>(
 }
 
 // Return
-type AtomFormReturn<S extends Record_> = FormResult<S>;
+export type AtomFormReturn<S extends Record_> = FormResult<S>;
 
 type FormResult<V extends Record_> =
   | { isValid: false }
   | { isValid: true; values: V };
 
-type FieldResult<Value> =
-  | { isValid: false }
-  | {
-      isValid: true;
-      value: Value;
-    };
-
-// Utils
-const state2result = <V>(state: FieldState<V>): FieldResult<V> => {
-  if (state.error != null) {
-    return { isValid: false };
-  }
-
-  return {
-    isValid: true,
-    value: state.submitValue,
-  };
-};
-
-type Record_ = Record<string, unknown>;
-type FieldAtom<Value> = WritableAtom<FieldResult<Value>, [Value], void>;
+export type Record_ = Record<string, unknown>;
