@@ -111,9 +111,15 @@ describe('type of atomForm', () => {
   });
 
   test('ValuesTypeOf type should match with schema type', () => {
-    const formAtom = atomForm(({ getField }) => ({
+    const formAtom = atomForm(({ getField, get, getForm }) => ({
       field1: getField(atomWithSchema<number>()),
       field2: getField(atomWithSchema<{ type: number }>()),
+      field3: get(atom(1)),
+      field4: getForm(
+        atomForm(({ getField }) => ({
+          field5: getField(atomWithSchema<number>()),
+        })),
+      ),
     }));
 
     type Values = ValuesTypeOf<typeof formAtom>;
@@ -121,6 +127,10 @@ describe('type of atomForm', () => {
     expectTypeOf<Values>().toEqualTypeOf<{
       field1: number;
       field2: { type: number };
+      field3: number;
+      field4: {
+        field5: number;
+      };
     }>();
   });
 });
