@@ -6,9 +6,7 @@ export type GetForm = <V extends Record_>(
   a: WritableAtom<AtomFormReturn<V>, [V], void>,
 ) => FieldAtom<V>;
 
-export const getFormAtom = <V extends Record_>(
-  a: WritableAtom<AtomFormReturn<V>, [V], void>,
-): FieldAtom<V> =>
+export const getFormAtom: GetForm = a =>
   atom(
     get => {
       const v = get(a);

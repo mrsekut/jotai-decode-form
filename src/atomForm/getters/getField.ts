@@ -11,7 +11,7 @@ type AtomWithSchema<V> = WritableAtom<
   void
 >;
 
-export const getFieldAtom = <V>(a: AtomWithSchema<V>): FieldAtom<V> =>
+export const getFieldAtom: GetField = a =>
   atom(
     get => state2result(get(a).state),
     (get, set, arg) => set(get(a).onChangeInValueAtom, arg),
