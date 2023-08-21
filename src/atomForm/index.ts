@@ -1,1 +1,1 @@
-export { atomForm } from './atomForm';
+export { atomForm, ValuesTypeOf } from './atomForm';

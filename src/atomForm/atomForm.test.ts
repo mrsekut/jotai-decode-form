@@ -1,10 +1,11 @@
-import { test, expect, expectTypeOf } from 'vitest';
+import { test, expect, expectTypeOf, describe } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { z } from 'zod';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { atomWithSchema } from '../atomWithSchema';
 import { atomForm } from '.';
+import { ValuesTypeOf } from './atomForm';
 
 test('when valid input is provided, the entire form values can be obtained', () => {
   const field1Atom = atomWithSchema({
@@ -86,24 +87,40 @@ test('atomForm is writable', () => {
   expect(field.current[0].exValue).toStrictEqual('1');
 });
 
-test('values type should match with schema type', () => {
-  const formAtom = atomForm(({ getField }) => ({
-    field1: getField(atomWithSchema<number>()),
-    field2: getField(atomWithSchema<{ type: number }>()),
-  }));
+describe('type of atomForm', () => {
+  test('values type should match with schema type', () => {
+    const formAtom = atomForm(({ getField }) => ({
+      field1: getField(atomWithSchema<number>()),
+      field2: getField(atomWithSchema<{ type: number }>()),
+    }));
 
-  const { result: form } = renderHook(() => useAtomValue(formAtom));
+    const { result: form } = renderHook(() => useAtomValue(formAtom));
 
-  expectTypeOf(form.current).toEqualTypeOf<
-    | {
-        isValid: false;
-      }
-    | {
-        isValid: true;
-        values: {
-          field1: number;
-          field2: { type: number };
-        };
-      }
-  >();
+    expectTypeOf(form.current).toEqualTypeOf<
+      | {
+          isValid: false;
+        }
+      | {
+          isValid: true;
+          values: {
+            field1: number;
+            field2: { type: number };
+          };
+        }
+    >();
+  });
+
+  test('ValuesTypeOf type should match with schema type', () => {
+    const formAtom = atomForm(({ getField }) => ({
+      field1: getField(atomWithSchema<number>()),
+      field2: getField(atomWithSchema<{ type: number }>()),
+    }));
+
+    type Values = ValuesTypeOf<typeof formAtom>;
+
+    expectTypeOf<Values>().toEqualTypeOf<{
+      field1: number;
+      field2: { type: number };
+    }>();
+  });
 });

@@ -68,3 +68,9 @@ type FormResult<V extends Record_> =
   | { isValid: true; values: V };
 
 export type Record_ = Record<string, unknown>;
+
+// prettier-ignore
+export type ValuesTypeOf<AtomForm> =
+  AtomForm extends WritableAtom<AtomFormReturn<infer Value>, any, any>
+    ? Value
+    : never;
