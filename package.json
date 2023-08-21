@@ -1,6 +1,6 @@
 {
   "name": "jotai-decode-form",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "typed form",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
