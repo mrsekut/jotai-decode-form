@@ -5,8 +5,8 @@ import { atomForm } from '../atomForm';
 
 test('set and get with getAtom', () => {
   const fieldAtom = atom<string>('1');
-  const formAtom = atomForm(({ get }) => ({
-    field: get(fieldAtom),
+  const formAtom = atomForm(() => ({
+    field: fieldAtom,
   }));
 
   const { result: form } = renderHook(() => useAtom(formAtom));
