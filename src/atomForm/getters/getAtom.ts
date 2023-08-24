@@ -1,11 +1,9 @@
 import { type WritableAtom, atom, SetStateAction } from 'jotai';
 import type { FieldAtom } from './types';
 
-export type GetAtom = <V>(
-  a: WritableAtom<V, [SetStateAction<V>], void>,
-) => FieldAtom<V>;
+export type AtomReturnAtom<V> = WritableAtom<V, [SetStateAction<V>], void>;
 
-export const getAtom: GetAtom = a =>
+export const toFieldAtom = <V>(a: AtomReturnAtom<V>): FieldAtom<V> =>
   atom(
     get => ({
       isValid: true,

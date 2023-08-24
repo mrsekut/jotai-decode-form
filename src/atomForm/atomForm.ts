@@ -1,36 +1,27 @@
-import { type WritableAtom, atom } from 'jotai';
-import { type GetField, getFieldAtom } from './getters/getField';
-import { type GetAtom, getAtom } from './getters/getAtom';
-import { type GetForm, getFormAtom } from './getters/getForm';
+import { type WritableAtom, atom, Getter } from 'jotai';
+import { toFieldAtom, AtomReturnAtom } from './getters/getAtom';
 import type { FieldAtom } from './getters/types';
 
-type Read<Fields> = (getters: Getters) => {
-  [K in keyof Fields]: FieldAtom<Fields[K]>;
-};
+type Read<Fields> = (getter: Getter) => AtomFields<Fields>;
 
-type Getters = {
-  get: GetAtom;
-  getField: GetField;
-  getForm: GetForm;
+type AtomFields<Fields> = {
+  [K in keyof Fields]: AtomReturnAtom<Fields[K]>;
 };
 
 export function atomForm<V extends Record_>(
   read: Read<V>,
 ): WritableAtom<AtomFormReturn<V>, [V], void> {
-  const fields = read({
-    get: getAtom,
-    getField: getFieldAtom,
-    getForm: getFormAtom,
-  });
+  const fieldsAtom = atom(get => f(read(get)));
 
-  type Fields = typeof fields;
-  const entries = Object.entries(fields) as [
-    keyof Fields,
-    Fields[keyof Fields],
-  ][];
-
+  // TODO: clean
   return atom(
     get => {
+      const fields = get(fieldsAtom);
+      type Fields = typeof fields;
+      const entries = Object.entries(fields) as [
+        keyof Fields,
+        Fields[keyof Fields],
+      ][];
       return entries.reduce(
         (acc, [k, v]) => {
           const field = get(v);
@@ -52,7 +43,13 @@ export function atomForm<V extends Record_>(
         { values: {}, isValid: true } as AtomFormReturn<V>,
       );
     },
-    (_, set, args) => {
+    (get, set, args) => {
+      const fields = get(fieldsAtom);
+      type Fields = typeof fields;
+      const entries = Object.entries(fields) as [
+        keyof Fields,
+        Fields[keyof Fields],
+      ][];
       entries.forEach(([k, fieldAtom]) => {
         set(fieldAtom, args[k]);
       });
@@ -74,3 +71,13 @@ export type ValuesTypeOf<AtomForm> =
   AtomForm extends WritableAtom<AtomFormReturn<infer Value>, any, any>
     ? Value
     : never;
+
+// TODO: name, type:return
+const f = (fields: AtomFields<unknown>): Record<string, FieldAtom<unknown>> => {
+  return Object.fromEntries(
+    Object.entries(fields).map(([k, v]) => {
+      // TODO: isAtom
+      return [k, toFieldAtom(v)];
+    }),
+  );
+};
