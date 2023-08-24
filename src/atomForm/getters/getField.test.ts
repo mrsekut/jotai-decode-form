@@ -8,8 +8,8 @@ test('set and get with getField', () => {
   const fieldAtom = atomWithSchema<string>({
     initValue: '1',
   });
-  const formAtom = atomForm(({ getField }) => ({
-    field: getField(fieldAtom),
+  const formAtom = atomForm(() => ({
+    field: fieldAtom,
   }));
 
   const { result: form } = renderHook(() => useAtom(formAtom));

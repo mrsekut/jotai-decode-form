@@ -1,17 +1,20 @@
 import { type WritableAtom, atom, Getter } from 'jotai';
-import { toFieldAtom, AtomReturnAtom } from './getters/getAtom';
 import type { FieldAtom } from './getters/types';
+
+import * as A from './getters/getAtom';
+import * as S from './getters/getField';
+import { isAtomWithSchema } from '../atomWithSchema/atomWithSchema';
 
 type Read<Fields> = (getter: Getter) => AtomFields<Fields>;
 
 type AtomFields<Fields> = {
-  [K in keyof Fields]: AtomReturnAtom<Fields[K]>;
+  [K in keyof Fields]: A.AtomReturnAtom<any> | S.AtomWithSchemaReturnAtom<any>;
 };
 
 export function atomForm<V extends Record_>(
   read: Read<V>,
 ): WritableAtom<AtomFormReturn<V>, [V], void> {
-  const fieldsAtom = atom(get => f(read(get)));
+  const fieldsAtom = atom(get => f(get)(read(get)));
 
   // TODO: clean
   return atom(
@@ -73,11 +76,15 @@ export type ValuesTypeOf<AtomForm> =
     : never;
 
 // TODO: name, type:return
-const f = (fields: AtomFields<unknown>): Record<string, FieldAtom<unknown>> => {
-  return Object.fromEntries(
-    Object.entries(fields).map(([k, v]) => {
-      // TODO: isAtom
-      return [k, toFieldAtom(v)];
-    }),
-  );
-};
+const f =
+  (get: Getter) =>
+  (fields: AtomFields<unknown>): Record<string, FieldAtom<unknown>> => {
+    return Object.fromEntries(
+      Object.entries(fields).map(([k, v]) => {
+        if (isAtomWithSchema(get(v))) {
+          return [k, S.toFieldAtom(v)];
+        }
+        return [k, A.toFieldAtom(v)];
+      }),
+    );
+  };
