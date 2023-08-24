@@ -5,46 +5,45 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { atomWithSchema } from '../atomWithSchema';
 import { atomForm } from '.';
-import { ValuesTypeOf } from './atomForm';
+import { ValuesTypeOf, withAtomFormSym } from './atomForm';
 
-test.todo(
-  'when valid input is provided, the entire form values can be obtained',
-  () => {
-    const field1Atom = atomWithSchema({
-      schema: {
-        toView: String,
-        fromView: z.coerce.number().safeParse,
-      },
-    });
-    const field2Atom = atomWithSchema({ initValue: '1' });
+test('when valid input is provided, the entire form values can be obtained', () => {
+  const field1Atom = atomWithSchema({
+    schema: {
+      toView: String,
+      fromView: z.coerce.number().safeParse,
+    },
+  });
+  const field2Atom = atomWithSchema({ initValue: '1' });
 
-    const formAtom = atomForm(({ getField }) => ({
-      field1: getField(field1Atom),
-      field2: getField(field2Atom),
-    }));
+  const formAtom = atomForm(() => ({
+    field1: field1Atom,
+    field2: field2Atom,
+  }));
 
-    const { result: setField1 } = renderHook(() => useSetAtom(field1Atom));
-    const { result: form } = renderHook(() => useAtomValue(formAtom));
+  const { result: setField1 } = renderHook(() => useSetAtom(field1Atom));
+  const { result: form } = renderHook(() => useAtomValue(formAtom));
 
-    act(() => {
-      setField1.current('1'); // valid input
-    });
+  act(() => {
+    setField1.current('1'); // valid input
+  });
 
-    expect(form.current).toStrictEqual({
+  expect(form.current).toStrictEqual(
+    withAtomFormSym({
       isValid: true,
       values: { field1: 1, field2: '1' },
-    });
-  },
-);
+    }),
+  );
+});
 
-test.todo('when there is a validation error, isValid becomes false', () => {
+test('when there is a validation error, isValid becomes false', () => {
   const fieldAtom = atomWithSchema({
     schema: {
       toView: String,
       fromView: z.coerce.number().safeParse,
     },
   });
-  const formAtom = atomForm(({ getField }) => ({ field: getField(fieldAtom) }));
+  const formAtom = atomForm(() => ({ field: fieldAtom }));
 
   const { result: setField } = renderHook(() => useSetAtom(fieldAtom));
   const { result: form } = renderHook(() => useAtomValue(formAtom));
@@ -56,7 +55,7 @@ test.todo('when there is a validation error, isValid becomes false', () => {
   expect(form.current.isValid).toStrictEqual(false);
 });
 
-test.todo('atomForm is writable', () => {
+test('atomForm is writable', () => {
   const field1Atom = atom(0);
   const field2Atom = atomWithSchema<number>({
     schema: {
@@ -64,9 +63,9 @@ test.todo('atomForm is writable', () => {
       fromView: z.coerce.number().safeParse,
     },
   });
-  const formAtom = atomForm(({ get, getField }) => ({
-    field1: get(field1Atom),
-    field2: getField(field2Atom),
+  const formAtom = atomForm(() => ({
+    field1: field1Atom,
+    field2: field2Atom,
   }));
 
   const { result: form } = renderHook(() => useAtom(formAtom));
@@ -79,22 +78,24 @@ test.todo('atomForm is writable', () => {
     });
   });
 
-  expect(form.current[0]).toStrictEqual({
-    isValid: true,
-    values: {
-      field1: 1,
-      field2: 1,
-    },
-  });
+  expect(form.current[0]).toStrictEqual(
+    withAtomFormSym({
+      isValid: true,
+      values: {
+        field1: 1,
+        field2: 1,
+      },
+    }),
+  );
   expect(field.current[0].value).toStrictEqual(1);
   expect(field.current[0].exValue).toStrictEqual('1');
 });
 
-describe.todo('type of atomForm', () => {
+describe('type of atomForm', () => {
   test('values type should match with schema type', () => {
-    const formAtom = atomForm(({ getField }) => ({
-      field1: getField(atomWithSchema<number>()),
-      field2: getField(atomWithSchema<{ type: number }>()),
+    const formAtom = atomForm(() => ({
+      field1: atomWithSchema<number>(),
+      field2: atomWithSchema<{ type: number }>(),
     }));
 
     const { result: form } = renderHook(() => useAtomValue(formAtom));
@@ -114,15 +115,13 @@ describe.todo('type of atomForm', () => {
   });
 
   test('ValuesTypeOf type should match with schema type', () => {
-    const formAtom = atomForm(({ getField, get, getForm }) => ({
-      field1: getField(atomWithSchema<number>()),
-      field2: getField(atomWithSchema<{ type: number }>()),
-      field3: get(atom(1)),
-      field4: getForm(
-        atomForm(({ getField }) => ({
-          field5: getField(atomWithSchema<number>()),
-        })),
-      ),
+    const formAtom = atomForm(() => ({
+      field1: atomWithSchema<number>(),
+      field2: atomWithSchema<{ type: number }>(),
+      field3: atom(1),
+      field4: atomForm(() => ({
+        field5: atomWithSchema<number>(),
+      })),
     }));
 
     type Values = ValuesTypeOf<typeof formAtom>;
