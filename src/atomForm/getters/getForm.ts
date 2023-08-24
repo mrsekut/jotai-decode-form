@@ -2,11 +2,15 @@ import { type WritableAtom, atom } from 'jotai';
 import type { Record_, AtomFormReturn } from '../atomForm';
 import type { FieldAtom } from './types';
 
-export type GetForm = <V extends Record_>(
-  a: WritableAtom<AtomFormReturn<V>, [V], void>,
-) => FieldAtom<V>;
+export type AtomFormReturnAtom<V extends Record_> = WritableAtom<
+  AtomFormReturn<V>,
+  [V],
+  void
+>;
 
-export const getFormAtom: GetForm = a =>
+export const toFieldAtom = <V extends Record_>(
+  a: AtomFormReturnAtom<V>,
+): FieldAtom<V> =>
   atom(
     get => {
       const v = get(a);

@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useAtom } from 'jotai';
-import { atomForm } from '../atomForm';
+import { atomForm, withAtomFormSym } from '../atomForm';
 import { atomWithSchema } from '../../atomWithSchema';
 
 test('set and get with getField', () => {
@@ -20,10 +20,12 @@ test('set and get with getField', () => {
     });
   });
 
-  expect(form.current[0]).toStrictEqual({
-    isValid: true,
-    values: {
-      field: '2',
-    },
-  });
+  expect(form.current[0]).toStrictEqual(
+    withAtomFormSym({
+      isValid: true,
+      values: {
+        field: '2',
+      },
+    }),
+  );
 });

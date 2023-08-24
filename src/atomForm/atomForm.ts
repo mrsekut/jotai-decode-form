@@ -3,12 +3,17 @@ import type { FieldAtom } from './getters/types';
 
 import * as A from './getters/getAtom';
 import * as S from './getters/getField';
+import * as F from './getters/getForm';
 import { isAtomWithSchema } from '../atomWithSchema/atomWithSchema';
 
 type Read<Fields> = (getter: Getter) => AtomFields<Fields>;
 
+// TODO: type:WritableAtomなら何でも良いということになってしまってる
 type AtomFields<Fields> = {
-  [K in keyof Fields]: A.AtomReturnAtom<any> | S.AtomWithSchemaReturnAtom<any>;
+  [K in keyof Fields]:
+    | A.AtomReturnAtom<any>
+    | S.AtomWithSchemaReturnAtom<any>
+    | F.AtomFormReturnAtom<any>;
 };
 
 export function atomForm<V extends Record_>(
@@ -30,18 +35,18 @@ export function atomForm<V extends Record_>(
           const field = get(v);
 
           if (!acc.isValid || !field.isValid) {
-            return {
+            return withAtomFormSym({
               isValid: false,
-            };
+            });
           }
 
-          return {
+          return withAtomFormSym({
             isValid: true,
             values: {
               ...acc.values,
               [k]: field.value,
             },
-          };
+          });
         },
         { values: {}, isValid: true } as AtomFormReturn<V>,
       );
@@ -54,7 +59,7 @@ export function atomForm<V extends Record_>(
         Fields[keyof Fields],
       ][];
       entries.forEach(([k, fieldAtom]) => {
-        set(fieldAtom, args[k]);
+        set(fieldAtom as any, args[k]);
       });
     },
   );
@@ -69,6 +74,12 @@ type FormResult<V extends Record_> =
 
 export type Record_ = Record<string, unknown>;
 
+const atomFormSym = Symbol('atomFormSym');
+export const withAtomFormSym = <T>(t: T) => ({ ...t, [atomFormSym]: true });
+const isAtomForm = <V extends Record_>(
+  a: any,
+): a is WritableAtom<AtomFormReturn<V>, [V], void> => a[atomFormSym] === true;
+
 // prettier-ignore
 export type ValuesTypeOf<AtomForm> =
   AtomForm extends WritableAtom<AtomFormReturn<infer Value>, any, any>
@@ -78,9 +89,14 @@ export type ValuesTypeOf<AtomForm> =
 // TODO: name, type:return
 const f =
   (get: Getter) =>
-  (fields: AtomFields<unknown>): Record<string, FieldAtom<unknown>> => {
+  (
+    fields: AtomFields<unknown>,
+  ): Record<string, FieldAtom<Record_> | FieldAtom<unknown>> => {
     return Object.fromEntries(
       Object.entries(fields).map(([k, v]) => {
+        if (isAtomForm(get(v))) {
+          return [k, F.toFieldAtom(v)];
+        }
         if (isAtomWithSchema(get(v))) {
           return [k, S.toFieldAtom(v)];
         }
