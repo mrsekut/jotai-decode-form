@@ -1,9 +1,9 @@
 import { type WritableAtom, atom, Getter } from 'jotai';
-import type { FieldAtom } from './getters/types';
+import type { FieldAtom } from './toFieldAtoms/types';
 
-import * as A from './getters/getAtom';
-import * as S from './getters/getField';
-import * as F from './getters/getForm';
+import * as A from './toFieldAtoms/atom';
+import * as S from './toFieldAtoms/atomWithSchema';
+import * as F from './toFieldAtoms/atomForm';
 import { isAtomWithSchema } from '../atomWithSchema/atomWithSchema';
 
 type Read<Fields> = (getter: Getter) => AtomFields<Fields>;
