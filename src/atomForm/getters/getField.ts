@@ -3,15 +3,13 @@ import type { AtomWithSchemaReturn } from '../../atomWithSchema/atomWithSchema';
 import type { FieldState } from '../../atomWithSchema/fieldState';
 import type { FieldAtom, FieldResult } from './types';
 
-export type GetField = <V>(a: AtomWithSchema<V>) => FieldAtom<V>;
-
-type AtomWithSchema<V> = WritableAtom<
+export type AtomWithSchemaReturnAtom<V> = WritableAtom<
   AtomWithSchemaReturn<V, any, any>,
-  [any],
+  [V],
   void
 >;
 
-export const getFieldAtom: GetField = a =>
+export const toFieldAtom = <V>(a: AtomWithSchemaReturnAtom<V>): FieldAtom<V> =>
   atom(
     get => state2result(get(a).state),
     (get, set, arg) => set(get(a).onChangeInValueAtom, arg),

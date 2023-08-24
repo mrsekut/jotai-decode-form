@@ -106,6 +106,7 @@ export function atomWithSchema<
 
   return atom(
     get => ({
+      [atomWithSchemaSym]: true,
       value: get(valueAtom),
       exValue: get(externalAtom),
       state: get(stateAtom),
@@ -152,3 +153,9 @@ export const success = <Output>(data: Output): Success<Output> => ({
 
 type Failure = { success: false; error: ZodError };
 type ZodError = { issues: { message: string }[] };
+
+const atomWithSchemaSym = Symbol('atomWithSchemaSym');
+export const isAtomWithSchema = <V>(
+  a: any,
+): a is WritableAtom<AtomWithSchemaReturn<V, any, any>, [any], void> =>
+  a[atomWithSchemaSym] === true;
