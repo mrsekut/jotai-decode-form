@@ -1,35 +1,34 @@
 import { type WritableAtom, atom, Getter } from 'jotai';
-import type { FieldAtom } from './toFieldAtoms/types';
+import type { FieldResultAtom } from './fieldResult/types';
 
-import * as A from './toFieldAtoms/atom';
-import * as S from './toFieldAtoms/atomWithSchema';
-import * as F from './toFieldAtoms/atomForm';
+import * as A from './fieldResult/atom';
+import * as S from './fieldResult/atomWithSchema';
+import * as F from './fieldResult/atomForm';
 import { isAtomWithSchema } from '../atomWithSchema/atomWithSchema';
 
-type Read<Fields> = (getter: Getter) => AtomFields<Fields>;
+type Read<AtomFields> = (getter: Getter) => AtomFields;
 
-// TODO: type:WritableAtomなら何でも良いということになってしまってる
-type AtomFields<Fields> = {
-  [K in keyof Fields]:
-    | A.AtomReturnAtom<any>
-    | S.AtomWithSchemaReturnAtom<any>
-    | F.AtomFormReturnAtom<any>;
-};
+export function atomForm<
+  AtomFields extends Record<string, WritableAtom<any, any, any>>,
+  Values extends FormValues = PickByValues<AtomFields>,
+>(
+  read: Read<AtomFields>,
+): WritableAtom<AtomFormReturn<Values>, [Values], void> {
+  type FieldResults = {
+    [K in keyof Values]: FieldResultAtom<Values[K]>;
+  };
+  const fieldsAtom = atom(
+    get => toFieldResultAtom(get)(read(get)) as FieldResults,
+  );
 
-export function atomForm<V extends Record_>(
-  read: Read<V>,
-): WritableAtom<AtomFormReturn<V>, [V], void> {
-  const fieldsAtom = atom(get => f(get)(read(get)));
-
-  // TODO: clean
   return atom(
     get => {
       const fields = get(fieldsAtom);
-      type Fields = typeof fields;
       const entries = Object.entries(fields) as [
-        keyof Fields,
-        Fields[keyof Fields],
+        keyof FieldResults,
+        FieldResults[keyof FieldResults],
       ][];
+
       return entries.reduce(
         (acc, [k, v]) => {
           const field = get(v);
@@ -48,35 +47,54 @@ export function atomForm<V extends Record_>(
             },
           });
         },
-        { values: {}, isValid: true } as AtomFormReturn<V>,
+        { values: {}, isValid: true } as AtomFormReturn<Values>,
       );
     },
     (get, set, args) => {
       const fields = get(fieldsAtom);
-      type Fields = typeof fields;
       const entries = Object.entries(fields) as [
-        keyof Fields,
-        Fields[keyof Fields],
+        keyof FieldResults,
+        FieldResults[keyof FieldResults],
       ][];
+
       entries.forEach(([k, fieldAtom]) => {
-        set(fieldAtom as any, args[k]);
+        set(fieldAtom, args[k]);
       });
     },
   );
 }
 
-// Return
-export type AtomFormReturn<S extends Record_> = FormResult<S>;
+const toFieldResultAtom =
+  (get: Getter) =>
+  <AtomFields extends Record<string, WritableAtom<any, any, any>>>(
+    fields: AtomFields,
+  ) => {
+    return Object.fromEntries(
+      Object.entries(fields).map(([k, v]) => {
+        if (isAtomForm(get(v))) {
+          return [k, F.toFieldResultAtom(v)];
+        }
+        if (isAtomWithSchema(get(v))) {
+          return [k, S.toFieldResultAtom(v)];
+        }
+        return [k, A.toFieldResultAtom(v)];
+      }),
+    );
+  };
 
-type FormResult<V extends Record_> =
+// Return
+export type AtomFormReturn<Values extends FormValues> = FormResult<Values>;
+
+type FormResult<V extends FormValues> =
   | { isValid: false }
   | { isValid: true; values: V };
 
-export type Record_ = Record<string, unknown>;
+export type FormValues = Record<string, unknown>;
 
+// Symbol
 const atomFormSym = Symbol('atomFormSym');
 export const withAtomFormSym = <T>(t: T) => ({ ...t, [atomFormSym]: true });
-const isAtomForm = <V extends Record_>(
+const isAtomForm = <V extends FormValues>(
   a: any,
 ): a is WritableAtom<AtomFormReturn<V>, [V], void> => a[atomFormSym] === true;
 
@@ -86,21 +104,11 @@ export type ValuesTypeOf<AtomForm> =
     ? Value
     : never;
 
-// TODO: name, type:return
-const f =
-  (get: Getter) =>
-  (
-    fields: AtomFields<unknown>,
-  ): Record<string, FieldAtom<Record_> | FieldAtom<unknown>> => {
-    return Object.fromEntries(
-      Object.entries(fields).map(([k, v]) => {
-        if (isAtomForm(get(v))) {
-          return [k, F.toFieldAtom(v)];
-        }
-        if (isAtomWithSchema(get(v))) {
-          return [k, S.toFieldAtom(v)];
-        }
-        return [k, A.toFieldAtom(v)];
-      }),
-    );
-  };
+// prettier-ignore
+type PickByValues<F> = {
+  [K in keyof F]:
+      F[K] extends F.AtomFormReturnAtom<infer V>       ? V
+    : F[K] extends S.AtomWithSchemaReturnAtom<infer V> ? V
+    : F[K] extends A.AtomReturnAtom<infer V>           ? V
+    : never;
+};
