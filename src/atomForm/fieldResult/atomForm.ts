@@ -1,10 +1,14 @@
 import { type WritableAtom, atom } from 'jotai';
-import type { AtomFormReturn } from '../atomForm';
+import type { AtomFormReturn, FormValues } from '../atomForm';
 import type { FieldResultAtom } from './types';
 
-export type AtomFormReturnAtom<V> = WritableAtom<AtomFormReturn<V>, [V], void>;
+export type AtomFormReturnAtom<V extends FormValues> = WritableAtom<
+  AtomFormReturn<V>,
+  [V],
+  void
+>;
 
-export const toFieldResultAtom = <V>(
+export const toFieldResultAtom = <V extends FormValues>(
   a: AtomFormReturnAtom<V>,
 ): FieldResultAtom<V> =>
   atom(
