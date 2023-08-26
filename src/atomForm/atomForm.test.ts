@@ -135,4 +135,26 @@ describe('type of atomForm', () => {
       };
     }>();
   });
+
+  test('specify the type of atomForm and it matches the type inferred by ValuesTypeOf', () => {
+    type Values = {
+      field1: number;
+      field2: { type: number };
+      field3: number;
+      field4: {
+        field5: number;
+      };
+    };
+
+    const formAtom = atomForm<Values>(() => ({
+      field1: atomWithSchema<number>(),
+      field2: atomWithSchema<{ type: number }>(),
+      field3: atom(1),
+      field4: atomForm(() => ({
+        field5: atomWithSchema<number>(),
+      })),
+    }));
+
+    expectTypeOf<Values>().toEqualTypeOf<ValuesTypeOf<typeof formAtom>>();
+  });
 });

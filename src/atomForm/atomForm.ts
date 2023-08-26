@@ -9,8 +9,8 @@ import { isAtomWithSchema } from '../atomWithSchema/atomWithSchema';
 type Read<AtomFields> = (getter: Getter) => AtomFields;
 
 export function atomForm<
-  AtomFields extends Record<string, WritableAtom<any, any, any>>,
-  Values extends FormValues = PickByValues<AtomFields>,
+  Values extends PickByValues<AtomFields>,
+  AtomFields extends Record<string, WritableAtom<any, any, any>> = any,
 >(
   read: Read<AtomFields>,
 ): WritableAtom<AtomFormReturn<Values>, [Values], void> {
