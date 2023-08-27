@@ -1,10 +1,6 @@
 import { type WritableAtom, atom, Getter } from 'jotai';
 import type { FieldResultAtom } from './fieldResult/types';
-
-import * as A from './fieldResult/atom';
-import * as S from './fieldResult/atomWithSchema';
-import * as F from './fieldResult/atomForm';
-import { isAtomWithSchema } from '../atomWithSchema/atomWithSchema';
+import { type PickByValues, toFieldResultAtom } from './fieldResult';
 
 type Read<AtomFields> = (getter: Getter) => AtomFields;
 
@@ -17,9 +13,7 @@ export function atomForm<
   type FieldResults = {
     [K in keyof Values]: FieldResultAtom<Values[K]>;
   };
-  const fieldsAtom = atom(
-    get => toFieldResultAtom(get)(read(get)) as FieldResults,
-  );
+  const fieldsAtom = atom(get => toFieldResultAtom(get)(read(get)));
 
   return atom(
     get => {
@@ -64,24 +58,6 @@ export function atomForm<
   );
 }
 
-const toFieldResultAtom =
-  (get: Getter) =>
-  <AtomFields extends Record<string, WritableAtom<any, any, any>>>(
-    fields: AtomFields,
-  ) => {
-    return Object.fromEntries(
-      Object.entries(fields).map(([k, v]) => {
-        if (isAtomForm(get(v))) {
-          return [k, F.toFieldResultAtom(v)];
-        }
-        if (isAtomWithSchema(get(v))) {
-          return [k, S.toFieldResultAtom(v)];
-        }
-        return [k, A.toFieldResultAtom(v)];
-      }),
-    );
-  };
-
 // Return
 export type AtomFormReturn<Values extends FormValues> = FormResult<Values>;
 
@@ -94,7 +70,7 @@ export type FormValues = Record<string, unknown>;
 // Symbol
 const atomFormSym = Symbol('atomFormSym');
 export const withAtomFormSym = <T>(t: T) => ({ ...t, [atomFormSym]: true });
-const isAtomForm = <V extends FormValues>(
+export const isAtomForm = <V extends FormValues>(
   a: any,
 ): a is WritableAtom<AtomFormReturn<V>, [V], void> => a[atomFormSym] === true;
 
@@ -103,12 +79,3 @@ export type ValuesTypeOf<AtomForm> =
   AtomForm extends WritableAtom<AtomFormReturn<infer Value>, any, any>
     ? Value
     : never;
-
-// prettier-ignore
-type PickByValues<F> = {
-  [K in keyof F]:
-      F[K] extends F.AtomFormReturnAtom<infer V>       ? V
-    : F[K] extends S.AtomWithSchemaReturnAtom<infer V> ? V
-    : F[K] extends A.AtomReturnAtom<infer V>           ? V
-    : never;
-};
