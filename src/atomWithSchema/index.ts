@@ -1,1 +1,5 @@
-export { atomWithSchema, success } from './atomWithSchema';
+export {
+  atomWithSchema,
+  success,
+  type AtomWithSchemaReturn,
+} from './atomWithSchema';
