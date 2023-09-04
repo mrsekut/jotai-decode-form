@@ -21,18 +21,20 @@ export const toFieldResultAtom =
     };
 
     return Object.fromEntries(
-      Object.entries(fields).map(([k, v]) => {
-        const a = get(v);
-
-        if (isAtomForm(a)) {
-          return [k, F.toFieldResultAtom(v)];
-        }
-        if (isAtomWithSchema(a)) {
-          return [k, S.toFieldResultAtom(v)];
-        }
-        return [k, A.toFieldResultAtom(v)];
-      }),
+      Object.entries(fields).map(([k, v]) => [k, toFieldResult(v)]),
     ) as FieldResults;
+
+    function toFieldResult(v: WritableAtom_<any>) {
+      const atom = get(v);
+
+      if (isAtomForm(atom)) {
+        return F.toFieldResultAtom(v);
+      }
+      if (isAtomWithSchema(atom)) {
+        return S.toFieldResultAtom(v);
+      }
+      return A.toFieldResultAtom(v);
+    }
   };
 
 // prettier-ignore
