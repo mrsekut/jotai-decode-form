@@ -6,7 +6,7 @@ type Read<AtomFields> = (getter: Getter) => AtomFields;
 
 export function atomForm<
   Values extends PickByValues<AtomFields>,
-  AtomFields extends Record<string, WritableAtom<any, any, any>> = any,
+  AtomFields extends Record<string, WritableAtom_<any>> = any,
 >(
   read: Read<AtomFields>,
 ): WritableAtom<AtomFormReturn<Values>, [Values], void> {
@@ -76,6 +76,8 @@ export const isAtomForm = <V extends FormValues>(
 
 // prettier-ignore
 export type ValuesTypeOf<AtomForm> =
-  AtomForm extends WritableAtom<AtomFormReturn<infer Value>, any, any>
+  AtomForm extends WritableAtom_<AtomFormReturn<infer Value>>
     ? Value
     : never;
+
+type WritableAtom_<V> = WritableAtom<V, any, any>;
