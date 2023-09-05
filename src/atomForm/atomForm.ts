@@ -6,7 +6,9 @@ type Read<AtomFields> = (getter: Getter) => AtomFields;
 
 export function atomForm<
   Values extends PickByValues<AtomFields>,
-  AtomFields extends Record<string, WritableAtom<any, any, any>> = any,
+  AtomFields extends
+    | Record<string, WritableAtom_<any>>
+    | WritableAtom_<any>[] = any,
 >(
   read: Read<AtomFields>,
 ): WritableAtom<AtomFormReturn<Values>, [Values], void> {
@@ -22,6 +24,26 @@ export function atomForm<
         keyof FieldResults,
         FieldResults[keyof FieldResults],
       ][];
+
+      if (Array.isArray(fields)) {
+        return fields.reduce(
+          (acc, fieldAtom) => {
+            const field = get(fieldAtom);
+
+            if (!acc.isValid || !field.isValid) {
+              return withAtomFormSym({
+                isValid: false,
+              });
+            }
+
+            return withAtomFormSym({
+              isValid: true,
+              values: [...acc.values, field.value],
+            });
+          },
+          { values: [], isValid: true } as AtomFormReturn<Values>,
+        );
+      }
 
       return entries.reduce(
         (acc, [k, v]) => {
@@ -65,7 +87,7 @@ type FormResult<V extends FormValues> =
   | { isValid: false }
   | { isValid: true; values: V };
 
-export type FormValues = Record<string, unknown>;
+export type FormValues = Record<string, unknown> | unknown[];
 
 // Symbol
 const atomFormSym = Symbol('atomFormSym');
@@ -76,6 +98,8 @@ export const isAtomForm = <V extends FormValues>(
 
 // prettier-ignore
 export type ValuesTypeOf<AtomForm> =
-  AtomForm extends WritableAtom<AtomFormReturn<infer Value>, any, any>
+  AtomForm extends WritableAtom_<AtomFormReturn<infer Value>>
     ? Value
     : never;
+
+type WritableAtom_<V> = WritableAtom<V, any, any>;

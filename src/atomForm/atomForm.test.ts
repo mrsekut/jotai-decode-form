@@ -63,9 +63,12 @@ test('atomForm is writable', () => {
       fromView: z.coerce.number().safeParse,
     },
   });
+  const field3Atom = [atom(0), atom(0)];
+
   const formAtom = atomForm(() => ({
     field1: field1Atom,
     field2: field2Atom,
+    field3: atomForm(() => field3Atom),
   }));
 
   const { result: form } = renderHook(() => useAtom(formAtom));
@@ -75,6 +78,7 @@ test('atomForm is writable', () => {
     form.current[1]({
       field1: 1,
       field2: 1,
+      field3: [1, 1],
     });
   });
 
@@ -84,6 +88,7 @@ test('atomForm is writable', () => {
       values: {
         field1: 1,
         field2: 1,
+        field3: [1, 1],
       },
     }),
   );
@@ -122,6 +127,7 @@ describe('type of atomForm', () => {
       field4: atomForm(() => ({
         field5: atomWithSchema<number>(),
       })),
+      field6: atomForm(() => [atom(1), atom(1)]),
     }));
 
     type Values = ValuesTypeOf<typeof formAtom>;
@@ -133,6 +139,7 @@ describe('type of atomForm', () => {
       field4: {
         field5: number;
       };
+      field6: number[];
     }>();
   });
 
@@ -144,6 +151,7 @@ describe('type of atomForm', () => {
       field4: {
         field5: number;
       };
+      field6: number[];
     };
 
     const formAtom = atomForm<Values>(() => ({
@@ -153,6 +161,7 @@ describe('type of atomForm', () => {
       field4: atomForm(() => ({
         field5: atomWithSchema<number>(),
       })),
+      field6: atomForm(() => [atom(1), atom(1)]),
     }));
 
     expectTypeOf<Values>().toEqualTypeOf<ValuesTypeOf<typeof formAtom>>();
