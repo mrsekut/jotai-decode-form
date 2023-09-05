@@ -11,7 +11,11 @@ type WritableAtom_<V> = WritableAtom<V, [unknown], unknown>;
 
 export const toFieldResultAtom =
   (get: Getter) =>
-  <AtomFields extends Record<string, WritableAtom_<any>>>(
+  <
+    AtomFields extends
+      | Record<string, WritableAtom_<any>>
+      | WritableAtom_<any>[],
+  >(
     fields: AtomFields,
   ) => {
     type FieldResults = {
@@ -20,8 +24,15 @@ export const toFieldResultAtom =
         : never;
     };
 
+    if (Array.isArray(fields)) {
+      return fields.map(toFieldResult) as FieldResults;
+    }
+
     return Object.fromEntries(
-      Object.entries(fields).map(([k, v]) => [k, toFieldResult(v)]),
+      Object.entries(fields).map(([k, v]) => [
+        k,
+        toFieldResult(v as WritableAtom_<any>),
+      ]),
     ) as FieldResults;
 
     function toFieldResult(v: WritableAtom_<any>) {
