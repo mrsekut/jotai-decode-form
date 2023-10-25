@@ -158,4 +158,4 @@ const atomWithSchemaSym = Symbol('atomWithSchemaSym');
 export const isAtomWithSchema = <V>(
   a: any,
 ): a is WritableAtom<AtomWithSchemaReturn<V, any, any>, [any], void> =>
-  a[atomWithSchemaSym] === true;
+  a != null && typeof a === 'object' && a[atomWithSchemaSym] === true;
