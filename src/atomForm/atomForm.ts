@@ -72,10 +72,46 @@ const atomFormSym = Symbol('atomFormSym');
 export const withAtomFormSym = <T>(t: T) => ({ ...t, [atomFormSym]: true });
 export const isAtomForm = <V extends FormValues>(
   a: any,
-): a is WritableAtom<AtomFormReturn<V>, [V], void> => a[atomFormSym] === true;
+): a is WritableAtom<AtomFormReturn<V>, [V], void> =>
+  a != null && typeof a === 'object' && a[atomFormSym] === true;
 
 // prettier-ignore
 export type ValuesTypeOf<AtomForm> =
   AtomForm extends WritableAtom<AtomFormReturn<infer Value>, any, any>
     ? Value
     : never;
+
+if (import.meta.vitest) {
+  const { it, describe, expect } = import.meta.vitest;
+
+  describe('isAtomForm function', () => {
+    it('should return true for objects with atomFormSym set to true', () => {
+      const testObj = { [atomFormSym]: true };
+      expect(isAtomForm(testObj)).toBe(true);
+    });
+
+    it('should return false for objects without atomFormSym', () => {
+      const testObj = { someKey: 'someValue' };
+      expect(isAtomForm(testObj)).toBe(false);
+    });
+
+    it('should return false for objects with atomFormSym set to false', () => {
+      const testObj = { [atomFormSym]: false };
+      expect(isAtomForm(testObj)).toBe(false);
+    });
+
+    it('should return false for null', () => {
+      expect(isAtomForm(null)).toBe(false);
+    });
+
+    it('should return false for undefined', () => {
+      expect(isAtomForm(undefined)).toBe(false);
+    });
+
+    it('should return false for primitives', () => {
+      expect(isAtomForm(123)).toBe(false);
+      expect(isAtomForm('string')).toBe(false);
+      expect(isAtomForm(true)).toBe(false);
+    });
+  });
+}
